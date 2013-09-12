@@ -20,8 +20,8 @@ the chunk, and then sends a chunked request of this data to the target server. F
 
 1. Create a virtual environment, and `pip install -r tools/pip-requires` in it.
 2. Change to the 'prototype' folder.
-3. Run 'python crypto_proxy.py -port=8000' from one terminal.
-4. Run 'python main.py -port=8080' from another terminal.
+3. Run 'python crypto_proxy.py -port=8000' from one terminal (this is the Swift Proxy prototype).
+4. Run 'python main.py -port=8080' from another terminal (this mimics a Swift target).
 5. Run 'curl -v -H "Transfer-Encoding: chunked" -H "Expect: 100-continue" --data-binary @testdata_out.txt http://localhost:8000/chunked'
 
 You should see positive activity on both servers, with all-caps being received on the target side.
