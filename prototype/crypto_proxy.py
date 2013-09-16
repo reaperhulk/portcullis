@@ -1,22 +1,22 @@
-"""Prototype crypto proxy module, that demonstrates accepting a POST of chunked data 
+"""Prototype crypto proxy module, that demonstrates accepting a POST of chunked data
 from a client to a Tornado server (via ChunkedHandler), which uses a state machine
 (in ChunkFromClientStateMachine) to manage the receipt of the chunked data. Each input
-chunk is encrypted (via SampleCryptoProcessor's encrypt_block() method) and then stored 
+chunk is encrypted (via SampleCryptoProcessor's encrypt_block() method) and then stored
 in a buffer (managed via BufferManager). Another state machine (ChunkToTargetStateMachine)
-manages sending/chunking the data to the target server, and draining the contents of 
-the buffer. 
+manages sending/chunking the data to the target server, and draining the contents of
+the buffer.
 
-The input chunk size, the internal crypto block size (16 bytes by default), and the 
-output chunk sizes (4k by default) are all isolated and managed independently of 
-each other. 
+The input chunk size, the internal crypto block size (16 bytes by default), and the
+output chunk sizes (4k by default) are all isolated and managed independently of
+each other.
 
 Caveats:
 - No attempt to handle http errors!
 - No attempt to throttle the in and out flows, so the buffer could become arbitrarily large!
-- Only POSTs from a client are supported, though several of the classes should be reusable 
+- Only POSTs from a client are supported, though several of the classes should be reusable
   for either GETs or POSTs.
-- When GETs are supported, the SampleCryptoProcessor could be used as is, but would be 
-  more secure to keep the inbound (from target server) encrypted data in the buffer, and only 
+- When GETs are supported, the SampleCryptoProcessor could be used as is, but would be
+  more secure to keep the inbound (from target server) encrypted data in the buffer, and only
   decrypted when data is pulled out via the 'read_xxxx()' methods.
 """
 
@@ -42,7 +42,7 @@ class SampleCryptoProcessor(object):
 
     def process_data(self, data):
         """Accept and process the input 'data' block by applying the 'block_method()'
-        to it. Return an 'output' that is a modulo of this processor's block size, which 
+        to it. Return an 'output' that is a modulo of this processor's block size, which
         may not be evenly aligned with the input data's size.
         """
         if not data:
@@ -181,7 +181,7 @@ class ChunkToTargetStateMachine(object):
             self.stream.write(b'{0}\r\n{1}\r\n'.format(hex(len(chunk))[2:], chunk),
                               callback=self._state_stream_is_idle)
 
-        # Else, we've sent all the data and the 'finish' state is called for, so 
+        # Else, we've sent all the data and the 'finish' state is called for, so
         #   output the closing 0-length chunk to end the long-running post.
         elif self.finish_is_needed:
             self.stream.write(b'0\r\n\r\n',
@@ -200,7 +200,7 @@ class ChunkToTargetStateMachine(object):
 #TODO(jwood): Could maybe add thread sleeps in here if the to-target state machine gets behind (so if
 #  the buffer size gets too big).
 class ChunkFromClientStateMachine(object):
-    """Handle receiving chunked data POST-ed to our proxy server."""    
+    """Handle receiving chunked data POST-ed to our proxy server."""
     def __init__(self, stream, callback_on_done, callback_on_error):
         self.stream = stream
         self.callback_on_done = callback_on_done
@@ -212,11 +212,11 @@ class ChunkFromClientStateMachine(object):
         self._state_enter_look_for_length()
 
     def _state_enter_look_for_length(self):
-        """Look for the chunk's length, calling back to _state_xxxx() when found.""" 
+        """Look for the chunk's length, calling back to _state_xxxx() when found."""
         self.stream.read_until(b'\r\n', self._state_callback_look_for_length)
 
     def _state_enter_process_data(self, chunk_length):
-        """Pull in the chunk's data, calling back to _state_xxxx() when done.""" 
+        """Pull in the chunk's data, calling back to _state_xxxx() when done."""
         self.stream.read_bytes(chunk_length + 2, self._state_callback_process_data)
 
     def _state_enter_done(self):
@@ -239,7 +239,7 @@ class ChunkFromClientStateMachine(object):
             self._state_enter_done()
 
     def _state_callback_process_data(self, data):
-        """Process the chunk of data we just recieved."
+        """Process the chunk of data we just recieved."""
         print('state-callback:process_data()..."{0}"'.format(data))
 
         assert data[-2:] == b'\r\n', "chunk data ends with CRLF"
